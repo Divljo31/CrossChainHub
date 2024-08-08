@@ -16,8 +16,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { BUNDLER_URL, CHAIN_NAME, RPC_URL } from '../lib/constants'
 import { mintNFT } from '../lib/mintNFT'
 import SafeLogo from '../public/safeLogo.png'
-import { etherUnits } from 'viem'
-import { sendETH } from '@/lib/sendETH'
+import { sendETH } from '../lib/sendETH'
 
 type props = {
   passkey: PasskeyArgType
@@ -73,7 +72,6 @@ function SafeAccountDetails({ passkey }: props) {
     setIsSafeDeployed(true)
     setUserOp(userOp)
   }
-
 
 
 
