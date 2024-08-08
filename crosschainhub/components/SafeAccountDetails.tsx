@@ -9,14 +9,16 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { MetaTransactionData } from '@safe-global/safe-core-sdk-types'
 import { PasskeyArgType } from '@safe-global/protocol-kit'
 import { Safe4337Pack } from '@safe-global/relay-kit'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
-import { BUNDLER_URL, CHAIN_NAME, RPC_URL } from '../lib/constants'
+import { BUNDLER_URL, CHAIN_NAME, RPC_URL, ARB_RPC_URL, OP_RPC_URL, BASE_RPC_URL } from '../lib/constants'
 import { mintNFT } from '../lib/mintNFT'
 import SafeLogo from '../public/safeLogo.png'
 import { sendETH } from '../lib/sendETH'
+import { ethers } from 'ethers'
 
 type props = {
   passkey: PasskeyArgType
@@ -44,6 +46,28 @@ function SafeAccountDetails({ passkey }: props) {
     const safeAddress = await safe4337Pack.protocolKit.getAddress()
     const isSafeDeployed = await safe4337Pack.protocolKit.isSafeDeployed()
 
+    const safeAmount = ethers.parseUnits('0.01', 'ether').toString()
+
+    const sendETHTransactionData: MetaTransactionData = {
+      to: safeAddress,
+      data: '0x',
+      value: safeAmount
+    }
+    const safeOperation = await safe4337Pack.createTransaction({
+      transactions: [sendETHTransactionData]
+    })
+  
+    const signedSafeOperation = await safe4337Pack.signSafeOperation(
+      safeOperation
+    )
+  
+    console.log('SafeOperation', signedSafeOperation)
+  
+    // 4) Execute SafeOperation
+    const userOperationHash = await safe4337Pack.executeTransaction({
+      executable: signedSafeOperation
+    })
+  
     setSafeAddress(safeAddress)
     setIsSafeDeployed(isSafeDeployed)
     setIsLoading(false)
@@ -66,7 +90,7 @@ function SafeAccountDetails({ passkey }: props) {
   async function handleSendETH() {
     setIsLoading(true)
 
-    const userOp = await sendETH(passkey, safeAddress!)
+    const userOp = await sendETH(passkey, safeAddress!, RPC_URL)
 
     setIsLoading(false)
     setIsSafeDeployed(true)
@@ -74,6 +98,24 @@ function SafeAccountDetails({ passkey }: props) {
   }
 
 
+  async function handleSendMultiETH() {
+    setIsLoading(true)
+
+    const userOp1 = await sendETH(passkey, safeAddress!, RPC_URL)
+    const userOp2 = await sendETH(passkey, safeAddress!, ARB_RPC_URL)
+    const userOp3 = await sendETH(passkey, safeAddress!, OP_RPC_URL)
+    const userOp4 = await sendETH(passkey, safeAddress!, BASE_RPC_URL)
+
+
+    setIsLoading(false)
+    setIsSafeDeployed(true)
+    setUserOp(userOp1)
+    setUserOp(userOp2)
+    setUserOp(userOp3)
+    setUserOp(userOp4)
+
+
+  }
 
   const safeLink = `https://app.safe.global/home?safe=sep:${safeAddress}`
   const jiffscanLink = `https://jiffyscan.xyz/userOpHash/${userOp}?network=${CHAIN_NAME}`
@@ -132,7 +174,14 @@ function SafeAccountDetails({ passkey }: props) {
               Send ETH
             </Button>
 
-
+            <Button
+              onClick={handleSendMultiETH}
+              startIcon={<PhotoIcon />}
+              variant='outlined'
+              sx={{ margin: '24px' }}
+            >
+              Send Multi ETH
+            </Button>
 
             {userOp && (
               <Typography textAlign={'center'} >
