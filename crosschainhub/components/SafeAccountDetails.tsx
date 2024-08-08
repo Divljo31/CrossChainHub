@@ -16,6 +16,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { BUNDLER_URL, CHAIN_NAME, RPC_URL } from '../lib/constants'
 import { mintNFT } from '../lib/mintNFT'
 import SafeLogo from '../public/safeLogo.png'
+import { etherUnits } from 'viem'
+import { sendETH } from '@/lib/sendETH'
 
 type props = {
   passkey: PasskeyArgType
@@ -61,6 +63,19 @@ function SafeAccountDetails({ passkey }: props) {
     setIsSafeDeployed(true)
     setUserOp(userOp)
   }
+
+  async function handleSendETH() {
+    setIsLoading(true)
+
+    const userOp = await sendETH(passkey, safeAddress!)
+
+    setIsLoading(false)
+    setIsSafeDeployed(true)
+    setUserOp(userOp)
+  }
+
+
+
 
   const safeLink = `https://app.safe.global/home?safe=sep:${safeAddress}`
   const jiffscanLink = `https://jiffyscan.xyz/userOpHash/${userOp}?network=${CHAIN_NAME}`
@@ -109,6 +124,17 @@ function SafeAccountDetails({ passkey }: props) {
             >
               Mint NFT
             </Button>
+
+            <Button
+              onClick={handleSendETH}
+              startIcon={<PhotoIcon />}
+              variant='outlined'
+              sx={{ margin: '24px' }}
+            >
+              Send ETH
+            </Button>
+
+
 
             {userOp && (
               <Typography textAlign={'center'} >
